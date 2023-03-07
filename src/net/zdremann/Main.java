@@ -22,131 +22,103 @@ public class Main extends Doclet {
 	private static File outputDir = null;
 
 	public static void main(String[] args) {
+		System.out.println("Java->Haxe Converter");
+
 		String source = null;
 		String packages = null;
 		String output = null;
 		String a = null;
-		for(int i=0; i<args.length; i++)
-		{
-			if(args[i].equals("-source"))
-			{
-				if(i > args.length - 2)
-				{
+		for (int i = 0; i < args.length; i++) {
+			if (args[i].equals("-source")) {
+				if (i > args.length - 2) {
 					throw new IllegalArgumentException("-source requires a source directory to be specified");
 				}
 				source = args[++i];
-			}
-			else if(args[i].equals("-output"))
-			{
-				if(i > args.length - 2)
-				{
+			} else if (args[i].equals("-output")) {
+				if (i > args.length - 2) {
 					throw new IllegalArgumentException("-output requires an ouput directory to be specified");
 				}
 				output = args[++i];
-			}
-			else if(args[i].equals("-packages"))
-			{
-				if(i > args.length -2)
-				{
+			} else if (args[i].equals("-packages")) {
+				if (i > args.length - 2) {
 					throw new IllegalArgumentException("-packages requires a list of packages, seperated by colons");
 				}
 				packages = args[++i];
 			}
 		}
-		if(source == null || packages == null || output == null)
-		{
-			throw new IllegalArgumentException("Usage: -source (source-dir) -output (output-dir) -packages (package-list)");
+		if (source == null || packages == null || output == null) {
+			throw new IllegalArgumentException(
+					"Usage: -source (source-dir) -output (output-dir) -packages (package-list)");
 		}
-		com.sun.tools.javadoc.Main.execute(new String[]{"-doclet",  Main.class.getName(), "-sourcepath", source, "-subpackages", packages, "-output", output});
+		com.sun.tools.javadoc.Main.execute(new String[] { "-doclet", Main.class.getName(), "-sourcepath", source,
+				"-subpackages", packages, "-output", output });
 		System.exit(0);
 	}
-	
 
-	public static boolean start(RootDoc root)
-	{
+	public static boolean start(RootDoc root) {
 		readOptions(root.options());
 		ClassDoc[] classes = root.classes();
 		List<Future<Void>> todo = new ArrayList<Future<Void>>();
-		
+
 		OutputStream importHx = null;
-		try
-		{
+		try {
 			outputDir.mkdirs();
 			importHx = new BufferedOutputStream(new FileOutputStream(new File(outputDir, "AllThings.hx")));
 			importHx.write(String.format("package foobarsky.best.deals;%n%n").getBytes());
-		}
-		catch (FileNotFoundException fnfe)
-		{
+		} catch (FileNotFoundException fnfe) {
 			fnfe.printStackTrace();
-		}
-		catch (IOException ioe)
-		{
+		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
-		
-		for(ClassDoc clazz : classes)
-		{
+
+		for (ClassDoc clazz : classes) {
 			PackageDoc pack = clazz.containingPackage();
-			
+
 			OutputStream outputStream;
-			
-			if(outputDir == null)
-			{
+
+			if (outputDir == null) {
 				outputStream = System.out;
-			}
-			else
-			{
+			} else {
 				String packs = pack.name().replace('.', File.separatorChar);
 				File output = new File(outputDir, packs);
 				output.mkdirs();
-				if(!output.exists())
-				{
+				if (!output.exists()) {
 					throw new RuntimeException("Could not create required directory in output directory");
 				}
-				output = new File(output, clazz.name().replace('.', '_')+".hx");
-				//System.out.println("Generating class: " + output.getAbsolutePath() + " (" + clazz.methods().length + ")");
-				try
-				{
+				output = new File(output, clazz.name().replace('.', '_') + ".hx");
+				// System.out.println("Generating class: " + output.getAbsolutePath() + " (" +
+				// clazz.methods().length + ")");
+				try {
 					outputStream = new BufferedOutputStream(new FileOutputStream(output));
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					throw new RuntimeException(e.getMessage());
 				}
 			}
-			
+
 			ClassWriterCallable cwc = new ClassWriterCallable(clazz, outputStream);
 			todo.add(ClassWriterCallable.writerService.submit(cwc));
-			try
-			{
+			try {
 				String className = clazz.name().replace('.', '_');
-                className = className.substring(0,1).toUpperCase() + className.substring(1);
-                String importString = String.format("import %s.%s;%n", pack.name(), className);
+				className = className.substring(0, 1).toUpperCase() + className.substring(1);
+				String importString = String.format("import %s.%s;%n", pack.name(), className);
 				importHx.write(importString.getBytes());
-				
-			}
-			catch (Exception e)
-			{
-				
+
+			} catch (Exception e) {
+
 			}
 		}
-		try
-		{
+		try {
 			importHx.write("class AllThings{}".getBytes());
 			importHx.flush();
 			importHx.close();
-		}
-		catch(Exception e)
-		{
-			
+		} catch (Exception e) {
+
 		}
 
-		for(Future<Void> future : todo)
-		{
-			try{
+		for (Future<Void> future : todo) {
+			try {
 				future.get();
-			}
-			catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -187,6 +159,7 @@ public class Main extends Doclet {
 		}
 		return 0;
 	}
+
 	public static LanguageVersion languageVersion() {
 		return LanguageVersion.JAVA_1_5;
 	}

@@ -11,13 +11,12 @@ import com.sun.javadoc.Type;
 
 public class Stringifier {
 	public static final String DYNAMIC_NAME = "Dynamic";
-	
+
 	public static final Map<String, String> RESERVED_NAMES = _BUILD_RESERVED_NAMES();
-	public static final Map<String, String> TYPE_MAP= _BUILD_MAP();
-	
-	private static Map<String,String> _BUILD_MAP()
-	{
-		Map<String,String> map = new HashMap<String, String>(16);
+	public static final Map<String, String> TYPE_MAP = _BUILD_MAP();
+
+	private static Map<String, String> _BUILD_MAP() {
+		Map<String, String> map = new HashMap<String, String>(16);
 		map.put("java.lang.String", "String");
 		map.put("java.lang.Void", "Void");
 		map.put("?", DYNAMIC_NAME);
@@ -32,110 +31,88 @@ public class Stringifier {
 		map.put("int", "Int");
 		map.put("boolean", "Bool");
 		map.put("void", "Void");
-		
+
 		return map;
 	}
-	
+
 	private static Map<String, String> _BUILD_RESERVED_NAMES() {
 		Map<String, String> map = new HashMap<String, String>();
-		
+
 		map.put("callback", "callback_");
 		map.put("function", "function_");
 		map.put("in", "_in");
 		map.put("cast", "cast_");
-		
+
 		return map;
 	}
 
-	public static String makeComment(String rawComment)
-	{
+	public static String makeComment(String rawComment) {
 		String[] lines = rawComment.split("\r\n|\n");
 		StringBuilder s = new StringBuilder();
-		if(rawComment.length() == 0)
-		{
+		if (rawComment.length() == 0) {
 			return "";
-		}
-		else if(lines.length == 1)
-		{
+		} else if (lines.length == 1) {
 			s.append(String.format("/** %s */%n", lines[0]));
-		}
-		else
-		{
+		} else {
 			s.append(String.format("/**%n"));
-			for(String line : lines)
-			{
+			for (String line : lines) {
 				s.append(String.format(" *%s%n", line));
 			}
 			s.append(String.format(" */%n"));
 		}
-		
+
 		return s.toString();
 	}
-	
-	public static String reservedNameAvoid(String name)
-	{
-		if(RESERVED_NAMES.containsKey(name))
-		{
+
+	public static String reservedNameAvoid(String name) {
+		if (RESERVED_NAMES.containsKey(name)) {
 			return RESERVED_NAMES.get(name);
-		}
-		else
-		{
+		} else {
 			return name.replace('$', '_');
 		}
 	}
-	
-	public static String typeToString(Type type)
-	{
+
+	public static String typeToString(Type type) {
 		String typeString = "%s";
 		String name;
-		if(type.dimension()!="")
-		{
-			int depth = type.dimension().length()/2;
-			for(int i=0;i<depth;i++)
-			{
+		if (type.dimension() != "") {
+			int depth = type.dimension().length() / 2;
+			for (int i = 0; i < depth; i++) {
 				typeString = String.format(typeString, "java.NativeArray<%s>");
 			}
 		}
-		if(TYPE_MAP.containsKey(type.qualifiedTypeName()))
-		{
+		if (TYPE_MAP.containsKey(type.qualifiedTypeName())) {
 			name = TYPE_MAP.get(type.qualifiedTypeName());
-		}
-		else
-		{
+		} else {
 			String packs = type.qualifiedTypeName();
-			packs = packs.substring(0, packs.length()-type.typeName().length());
+			packs = packs.substring(0, packs.length() - type.typeName().length());
 			String typeName = type.typeName().replace('.', '_');
-			typeName = typeName.substring(0,1).toUpperCase() + typeName.substring(1);
+			typeName = typeName.substring(0, 1).toUpperCase() + typeName.substring(1);
 			name = packs + typeName;
 		}
-		
-		if(type.asParameterizedType() != null)
-		{
+
+		if (type.asParameterizedType() != null) {
 			name += "<";
 			ParameterizedType t = type.asParameterizedType();
-			for(Type paramType : t.typeArguments())
-			{
+			for (Type paramType : t.typeArguments()) {
 				name += typeToString(paramType) + ",";
 			}
-			if(t.typeArguments().length == 0)
-			{
+			if (t.typeArguments().length == 0) {
 				ClassDoc clazz = type.asClassDoc();
-				if(clazz == null)
+				if (clazz == null)
 					name += DYNAMIC_NAME + ",";
-				else
-				{
+				else {
 					int numParams = clazz.typeParameters().length;
-					for(int i=0;i<numParams;i++)
-					{
+					for (int i = 0; i < numParams; i++) {
 						name += DYNAMIC_NAME + ",";
 					}
 				}
 			}
-			name = name.substring(0, name.length()-1) + ">";
+			name = name.substring(0, name.length() - 1) + ">";
 		}
-		
+
 		typeString = String.format(typeString, name);
-		
+
 		return typeString;
 	}
 }

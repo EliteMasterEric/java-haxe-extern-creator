@@ -17,8 +17,7 @@ public class ClassWriterCallable implements Callable<Void> {
 	private final ClassFormaterCallable formater;
 	public final OutputStream outputStream;
 
-	public ClassWriterCallable(ClassDoc clazz, OutputStream outputStream)
-	{
+	public ClassWriterCallable(ClassDoc clazz, OutputStream outputStream) {
 		formater = new ClassFormaterCallable(clazz);
 		inputStream = new PipedInputStream(2048);
 		this.outputStream = outputStream;
@@ -26,19 +25,15 @@ public class ClassWriterCallable implements Callable<Void> {
 
 	@Override
 	public Void call() throws Exception {
-		try
-		{
+		try {
 			inputStream.connect(formater.outputStream);
 			formaterService.submit(formater);
 			byte[] buffer = new byte[512];
 			int length;
-			while((length = inputStream.read(buffer))>0)
-			{
+			while ((length = inputStream.read(buffer)) > 0) {
 				outputStream.write(buffer, 0, length);
 			}
-		}
-		finally
-		{
+		} finally {
 			outputStream.flush();
 			outputStream.close();
 			inputStream.close();
