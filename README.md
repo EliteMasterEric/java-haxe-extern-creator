@@ -4,7 +4,9 @@ Parses a folder of `.java` files into appropriate `.hx` externs!
 
 ## Note for Users
 
-This generator is typically not necessary. The compiler argument `--java-lib-extern` 
+This generator is typically not necessary. The compiler argument `--java-lib-extern <jar-file>` will allow you to compile your code with full type checking.
+
+This generator is useful if you need to create a library of extern classes which you can modify and apply macros to. It also allows you to add HaxeDocs and typedefs for ease of use.
 
 ## Usage
 
@@ -12,7 +14,7 @@ Given:
 - a folder of `.java` files in `./source-folder/`
 - a set of packages to parse `net.package.a`, `net.package.b`
 - a set of jar files for the `.java` dependencies
-- a desired output folder at `./output-folder/` (optional)
+- a desired output folder at `./output-folder/` (optional, defualt is printing to console)
 
 Usage is simple:
 
@@ -40,5 +42,5 @@ Before utilizing the generated Haxe externs, check for any instances of `~~~` in
 - [X] Resolve element: `enum`
 - [X] Resolve type: Wildcard (`?`)
 - [X] Resolve all documentation
-- [] Resolve element: `record`
+- [X] Resolve element: `record`
 - [] Resolve element: `annotation_type`
